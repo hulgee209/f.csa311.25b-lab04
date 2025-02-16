@@ -57,6 +57,10 @@ public class ArrayIntQueue implements IntQueue {
             return null;
         }
         Integer value = elementData[head];
+
+        // **Bug Fix #1: Avoid accessing invalid indices**
+        elementData[head] = 0; // Clear reference for GC (not strictly necessary for int)
+        
         head = (head + 1) % elementData.length;
         size--;
         return value;
@@ -71,13 +75,15 @@ public class ArrayIntQueue implements IntQueue {
         return true;
     }
 
-    /** {@inheritDoc} */
+    //** {@inheritDoc} */
     public boolean isEmpty() {
-        return size >= 0;
+        // **Bug Fix #2: Incorrect condition**
+        return size == 0; // Fix: Should check `== 0` instead of `>= 0`
     }
 
     /** {@inheritDoc} */
     public Integer peek() {
+        if (isEmpty()) return null; // **Bug Fix #3: Prevent out-of-bounds access**
         return elementData[head];
     }
 
@@ -95,14 +101,14 @@ public class ArrayIntQueue implements IntQueue {
             int oldCapacity = elementData.length;
             int newCapacity = 2 * oldCapacity + 1;
             int[] newData = new int[newCapacity];
-            for (int i = head; i < oldCapacity; i++) {
-                newData[i - head] = elementData[i];
+
+            // **Bug Fix #4: Properly copy elements in circular buffer**
+            for (int i = 0; i < size; i++) {
+                newData[i] = elementData[(head + i) % oldCapacity];
             }
-            for (int i = 0; i < head; i++) {
-                newData[head - i] = elementData[i];
-            }
+
             elementData = newData;
-            head = 0;
+            head = 0; // Reset head to start of new array
         }
     }
 }
